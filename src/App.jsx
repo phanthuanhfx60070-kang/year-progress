@@ -4,9 +4,24 @@ import React, { useState, useEffect } from 'react';
 const LIFT_CONTRACT_ADDRESS = "0x47b93c2a0920BBe10eFc7854b8FD04a02E85d031";
 
 // ⚙️ 合约函数签名 (Function Selector)
-// 根据您提供的合约代码: function claim() public returns (bool)
-// claim() 的 16 进制签名确实是 0x4e71d92d
+// 0x4e71d92d is for claim()
 const FUNCTION_SELECTOR = "0x4e71d92d"; 
+
+// 🎨 12 Months Color Palette (Full Theme Support)
+const MONTH_THEMES = [
+  { name: "一月", color: "text-sky-500", dot: "bg-sky-400", btn: "bg-sky-500", border: "border-sky-500", hover: "hover:bg-sky-600", shadow: "shadow-sky-300" },
+  { name: "二月", color: "text-rose-500", dot: "bg-rose-400", btn: "bg-rose-500", border: "border-rose-500", hover: "hover:bg-rose-600", shadow: "shadow-rose-300" },
+  { name: "三月", color: "text-green-500", dot: "bg-green-400", btn: "bg-green-500", border: "border-green-500", hover: "hover:bg-green-600", shadow: "shadow-green-300" },
+  { name: "四月", color: "text-emerald-500", dot: "bg-emerald-400", btn: "bg-emerald-500", border: "border-emerald-500", hover: "hover:bg-emerald-600", shadow: "shadow-emerald-300" },
+  { name: "五月", color: "text-teal-500", dot: "bg-teal-400", btn: "bg-teal-500", border: "border-teal-500", hover: "hover:bg-teal-600", shadow: "shadow-teal-300" },
+  { name: "六月", color: "text-cyan-500", dot: "bg-cyan-400", btn: "bg-cyan-500", border: "border-cyan-500", hover: "hover:bg-cyan-600", shadow: "shadow-cyan-300" },
+  { name: "七月", color: "text-blue-500", dot: "bg-blue-400", btn: "bg-blue-500", border: "border-blue-500", hover: "hover:bg-blue-600", shadow: "shadow-blue-300" },
+  { name: "八月", color: "text-indigo-500", dot: "bg-indigo-400", btn: "bg-indigo-500", border: "border-indigo-500", hover: "hover:bg-indigo-600", shadow: "shadow-indigo-300" },
+  { name: "九月", color: "text-violet-500", dot: "bg-violet-400", btn: "bg-violet-500", border: "border-violet-500", hover: "hover:bg-violet-600", shadow: "shadow-violet-300" },
+  { name: "十月", color: "text-orange-500", dot: "bg-orange-400", btn: "bg-orange-500", border: "border-orange-500", hover: "hover:bg-orange-600", shadow: "shadow-orange-300" },
+  { name: "十一月", color: "text-amber-500", dot: "bg-amber-400", btn: "bg-amber-500", border: "border-amber-500", hover: "hover:bg-amber-600", shadow: "shadow-amber-300" },
+  { name: "十二月", color: "text-red-500", dot: "bg-red-400", btn: "bg-red-500", border: "border-red-500", hover: "hover:bg-red-600", shadow: "shadow-red-300" },
+];
 
 const App = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -64,7 +79,6 @@ const App = () => {
 
   // --- 🔗 核心功能：调用合约 claim() ---
   const handleDailyCheckIn = async () => {
-    // 1. 如果没连钱包，先连钱包
     if (!walletAddress) {
       connectWallet();
       return;
@@ -76,25 +90,19 @@ const App = () => {
     setCheckInLoading(true);
 
     try {
-      // 2. 构造 BSC 交易参数
-      // 您的合约是 PVP 模式，谁点谁领走当前积累的币
       const transactionParameters = {
-        to: LIFT_CONTRACT_ADDRESS, // 合约地址
-        from: walletAddress,       // 您的地址
-        data: FUNCTION_SELECTOR,   // 调用 claim()
-        value: '0x0',              // 0 ETH/BNB
+        to: LIFT_CONTRACT_ADDRESS,
+        from: walletAddress,
+        data: FUNCTION_SELECTOR,
+        value: '0x0',
       };
 
-      // 3. 唤起钱包签名
       const txHash = await ethereum.request({
         method: 'eth_sendTransaction',
         params: [transactionParameters],
       });
 
       console.log("Transaction Sent! Hash:", txHash);
-
-      // 4. 交易已发送
-      // 为了更好的体验，我们假设发送即成功，变为“已领”状态
       setIsCheckedInToday(true);
       setCheckInLoading(false);
 
@@ -102,15 +110,14 @@ const App = () => {
       console.error("Claim Failed:", error);
       setCheckInLoading(false);
       
-      // 如果用户取消了
       if (error.code !== 4001) {
         alert("交易发送失败，请检查网络是否在 BSC 链上。");
       }
     }
   };
 
-  const formatAddress = (addr) => {
-    return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
+  const formatAddressShort = (addr) => {
+    return addr ? addr.slice(-4).toUpperCase() : '';
   };
 
   // --- 日期计算逻辑 ---
@@ -130,11 +137,6 @@ const App = () => {
   const progressPercentage = ((dayOfYear / totalDays) * 100).toFixed(2);
   const daysRemaining = totalDays - dayOfYear;
 
-  const months = [
-    "一月", "二月", "三月", "四月", "五月", "六月",
-    "七月", "八月", "九月", "十月", "十一月", "十二月"
-  ];
-
   const getDotStatus = (index) => {
     const date = new Date(year, 0, index + 1);
     const dotMonth = date.getMonth();
@@ -153,24 +155,36 @@ const App = () => {
     }
   };
 
-  // 极简钱包状态指示器 (仅一个小圆点)
-  const WalletIndicator = () => {
-    if (!walletAddress) return null; // 未连接时不显示任何东西，保持极简
-    return (
-      <div className="absolute top-0 right-0 -mt-2 -mr-2">
-         <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-      </div>
-    );
-  };
+  // 获取当前月份的主题配置
+  const currentTheme = MONTH_THEMES[currentMonthIndex];
 
-  // --- 垂直打卡按钮 (完美适配月份高度) ---
+  // 极简钱包按钮 (Wallet Button - Small & English)
+  const WalletButton = () => (
+    <button 
+      onClick={connectWallet}
+      disabled={isConnecting}
+      className={`
+        w-14 md:w-16 h-10 md:h-12 rounded-xl flex items-center justify-center text-[10px] font-bold tracking-wider transition-all duration-300
+        ${walletAddress 
+          ? 'bg-zinc-800 text-white shadow-md' 
+          : 'bg-white border border-zinc-200 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600'
+        }
+      `}
+    >
+      {isConnecting ? (
+        <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
+      ) : walletAddress ? (
+        formatAddressShort(walletAddress) // 显示地址后4位
+      ) : (
+        "WALLET" // 显示英文单词
+      )}
+    </button>
+  );
+
+  // 垂直打卡按钮 (Check-in Button)
   const CheckInAction = () => {
-    const baseClass = "group w-14 md:w-16 h-full rounded-2xl flex flex-col items-center justify-center shadow-lg transition-all duration-300 active:scale-95 border";
+    const baseClass = "group w-14 md:w-16 flex-1 rounded-2xl flex flex-col items-center justify-center shadow-lg transition-all duration-300 active:scale-95 border";
     
-    // 状态 1: 已领 (交易已发送)
     if (isCheckedInToday) {
       return (
         <div className={`${baseClass} bg-amber-50 border-amber-100 text-amber-600 cursor-default`}>
@@ -182,27 +196,24 @@ const App = () => {
       );
     }
 
-    // 状态 2: 打卡/领币 (PVP Claim)
-    // 无论是否连接钱包，都显示“打卡”，点击时自动处理连接
     return (
       <button
         onClick={handleDailyCheckIn}
         disabled={checkInLoading}
-        className={`${baseClass} bg-rose-500 border-rose-500 text-white hover:bg-rose-600 hover:shadow-rose-200/50 hover:scale-[1.02] relative`}
+        // 🎨 使用 currentTheme 的颜色
+        className={`${baseClass} ${currentTheme.btn} ${currentTheme.border} text-white ${currentTheme.hover} hover:shadow-lg hover:scale-[1.02] relative`}
       >
         <div className="flex flex-col text-lg md:text-xl font-bold tracking-widest leading-tight gap-2 items-center">
           {checkInLoading ? (
             <span className="text-base animate-pulse">...</span>
           ) : (
             <>
-              {/* 极简文字: 打卡 */}
+              {/* 改回“打卡” */}
               <span>打</span>
               <span>卡</span>
             </>
           )}
         </div>
-        {/* 如果已连接钱包，显示一个小绿点指示 */}
-        <WalletIndicator />
       </button>
     );
   };
@@ -215,62 +226,66 @@ const App = () => {
         
         {/* 顶部区域 */}
         <div>
-          {/* 日期头部 (钱包按钮已移除，改为集成在打卡按钮上或隐藏) */}
-          <header className="flex flex-col gap-6 mb-8 border-b border-zinc-100 pb-6 md:flex-row md:items-start md:justify-between">
-            {/* 左侧：大日期 */}
-            <div>
-               <div className="flex items-baseline gap-3 md:gap-4">
-                <span className="text-5xl md:text-6xl font-bold tracking-tighter text-zinc-900 leading-none">
-                  {currentDayOfMonth}
-                </span>
-                <span className="text-2xl md:text-3xl font-medium text-zinc-600">
-                  {months[currentMonthIndex]}
-                </span>
-                <span className="text-2xl md:text-3xl font-light text-zinc-400">
-                  {year}
-                </span>
-              </div>
-              <div className="mt-2 text-lg font-medium text-zinc-500 tracking-wide">
-                {dayOfWeek}
-              </div>
-            </div>
-            
-            {/* 右侧：原本的钱包按钮区域现在留空，保持极简，钱包状态通过打卡按钮上的小绿点暗示 */}
-            <div className="hidden md:block">
-               {/* Spacer if needed */}
-            </div>
+          {/* Header */}
+          <header className="mb-8 border-b border-zinc-100 pb-6">
+             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                {/* 左侧：日期信息 */}
+                <div>
+                   <div className="flex items-baseline gap-3 md:gap-4">
+                    <span className="text-5xl md:text-6xl font-bold tracking-tighter text-zinc-900 leading-none">
+                      {currentDayOfMonth}
+                    </span>
+                    {/* 🎨 动态月份颜色 */}
+                    <span className={`text-2xl md:text-3xl font-medium ${currentTheme.color} transition-colors duration-500`}>
+                      {currentTheme.name}
+                    </span>
+                    <span className="text-2xl md:text-3xl font-light text-zinc-400">
+                      {year}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-lg font-medium text-zinc-500 tracking-wide">
+                    {dayOfWeek}
+                  </div>
+                </div>
+
+                {/* 右侧：钱包按钮 */}
+                <div className="flex justify-end pt-2">
+                   <WalletButton />
+                </div>
+             </div>
           </header>
 
-          {/* --- 中间行：左侧月份 + 右侧打卡按钮 --- */}
+          {/* --- 中间行：左侧月份 + 右侧功能列 --- */}
           <div className="mb-8 flex gap-4 md:gap-6 items-stretch">
             {/* 左侧：月份 (两排布局) */}
             <div className="flex-1">
               <div className="grid grid-cols-6 gap-2 md:gap-3 h-full">
-                {months.map((m, idx) => {
+                {MONTH_THEMES.map((m, idx) => {
                   const isActive = idx === currentMonthIndex;
                   const isPast = idx < currentMonthIndex;
+                  
                   return (
                     <div 
-                      key={m}
+                      key={m.name}
                       className={`
                         py-3 md:py-3.5 rounded-xl text-xs md:text-sm font-semibold text-center transition-all duration-300 flex items-center justify-center
                         ${isActive 
-                          ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-300 scale-105' 
+                          ? `${m.btn} text-white shadow-lg ${m.shadow} scale-105` 
                           : isPast 
                             ? 'text-zinc-300 bg-zinc-50/50' 
                             : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50'
                         }
                       `}
                     >
-                      {m}
+                      {m.name}
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* 右侧：打卡按钮 (自动高度) */}
-            <div className="shrink-0">
+            {/* 右侧：功能列 */}
+            <div className="shrink-0 flex flex-col justify-end">
                <CheckInAction />
             </div>
           </div>
@@ -281,16 +296,33 @@ const App = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">{year} Grid</h2>
             <div className="flex gap-2 md:gap-4 text-[10px] md:text-xs font-medium">
-              <div className="flex items-center gap-1.5 text-zinc-500"><div className="w-2 h-2 bg-zinc-900 rounded-full"></div> 已逝</div>
-              <div className="flex items-center gap-1.5 text-rose-500"><div className="w-2 h-2 bg-rose-400 rounded-full"></div> 剩余</div>
-              <div className="flex items-center gap-1.5 text-zinc-400"><div className="w-2 h-2 bg-zinc-200 rounded-full"></div> 将来</div>
+              <div className="flex items-center gap-1.5 text-zinc-500">
+                <div className="w-2 h-2 bg-zinc-900 rounded-full"></div> 已逝
+              </div>
+              {/* 🎨 动态图例颜色 */}
+              <div className={`flex items-center gap-1.5 ${currentTheme.color}`}>
+                <div className={`w-2 h-2 ${currentTheme.dot} rounded-full`}></div> 剩余
+              </div>
+              <div className="flex items-center gap-1.5 text-zinc-400">
+                <div className="w-2 h-2 bg-zinc-200 rounded-full"></div> 将来
+              </div>
             </div>
           </div>
           
           <div className="flex flex-wrap gap-x-[5px] gap-y-[10px] md:gap-[6px] justify-start content-start">
             {Array.from({ length: totalDays }).map((_, index) => {
               const status = getDotStatus(index);
-              let dotStyle = status === 'past' ? "bg-zinc-900" : status === 'urgent' ? "bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.5)] animate-pulse-slow scale-110" : "bg-zinc-200";
+              
+              // 🎨 动态点阵样式: urgent 使用 currentTheme.dot
+              let dotStyle = "";
+              if (status === 'past') {
+                dotStyle = "bg-zinc-900";
+              } else if (status === 'urgent') {
+                dotStyle = `${currentTheme.dot} animate-pulse-slow scale-110`;
+              } else {
+                dotStyle = "bg-zinc-200";
+              }
+
               const dateForDot = new Date(year, 0, index + 1);
               const dateStr = dateForDot.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 
