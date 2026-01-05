@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 const LIFT_CONTRACT_ADDRESS = "0x47b93c2a0920BBe10eFc7854b8FD04a02E85d031";
 
 // ⚙️ 合约函数签名 (Function Selector)
-// 0x4e71d92d is for claim()
 const FUNCTION_SELECTOR = "0x4e71d92d"; 
 
 // 🎨 12 Months Color Palette (Full Theme Support)
@@ -158,13 +157,13 @@ const App = () => {
   // 获取当前月份的主题配置
   const currentTheme = MONTH_THEMES[currentMonthIndex];
 
-  // 极简钱包按钮 (Wallet Button - Small & English)
+  // 极简钱包按钮 (Wallet Button)
   const WalletButton = () => (
     <button 
       onClick={connectWallet}
       disabled={isConnecting}
       className={`
-        w-14 md:w-16 h-10 md:h-12 rounded-xl flex items-center justify-center text-[10px] font-bold tracking-wider transition-all duration-300 border
+        w-12 md:w-16 h-8 md:h-12 rounded-xl flex items-center justify-center text-[10px] font-bold tracking-wider transition-all duration-300 border
         ${walletAddress 
           ? 'bg-white border-zinc-300 text-zinc-900 shadow-sm' 
           : 'bg-white border-zinc-200 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600'
@@ -174,21 +173,22 @@ const App = () => {
       {isConnecting ? (
         <span className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
       ) : walletAddress ? (
-        formatAddressShort(walletAddress) // 显示地址后4位
+        formatAddressShort(walletAddress)
       ) : (
-        "WALLET" // 显示英文单词
+        "WALLET"
       )}
     </button>
   );
 
   // 垂直打卡按钮 (Check-in Button)
   const CheckInAction = () => {
-    const baseClass = "group w-14 md:w-16 flex-1 rounded-2xl flex flex-col items-center justify-center shadow-lg transition-all duration-300 active:scale-95 border";
+    // 基础样式：去掉了 shadow-lg，改为更接近 Wallet 的风格
+    const baseClass = "group w-12 md:w-16 h-full rounded-2xl flex flex-col items-center justify-center transition-all duration-300 active:scale-95 border";
     
     if (isCheckedInToday) {
       return (
-        <div className={`${baseClass} bg-amber-50 border-amber-100 text-amber-600 cursor-default`}>
-          <div className="flex flex-col text-sm md:text-base font-bold tracking-widest leading-tight opacity-90 text-center gap-2">
+        <div className={`${baseClass} bg-zinc-50 border-zinc-200 text-zinc-400 cursor-default`}>
+          <div className="flex flex-col text-xs md:text-base font-bold tracking-widest leading-tight opacity-90 text-center gap-1 md:gap-2">
             <span>已</span>
             <span>领</span>
           </div>
@@ -200,15 +200,14 @@ const App = () => {
       <button
         onClick={handleDailyCheckIn}
         disabled={checkInLoading}
-        // 🎨 使用 currentTheme 的颜色
-        className={`${baseClass} ${currentTheme.btn} ${currentTheme.border} text-white ${currentTheme.hover} hover:shadow-lg hover:scale-[1.02] relative`}
+        // 🎨 样式修改：纯白背景 + 灰色边框 + 灰色文字，Hover 时变深
+        className={`${baseClass} bg-white border-zinc-200 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600 hover:shadow-sm relative`}
       >
-        <div className="flex flex-col text-lg md:text-xl font-bold tracking-widest leading-tight gap-2 items-center">
+        <div className="flex flex-col text-sm md:text-xl font-bold tracking-widest leading-tight gap-1 md:gap-2 items-center">
           {checkInLoading ? (
-            <span className="text-base animate-pulse">...</span>
+            <span className="text-xs md:text-base animate-pulse">...</span>
           ) : (
             <>
-              {/* 改回“打卡” */}
               <span>打</span>
               <span>卡</span>
             </>
@@ -219,47 +218,47 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans flex flex-col items-center py-6 px-4 md:py-10 selection:bg-zinc-800 selection:text-white">
+    <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans flex flex-col items-center py-4 px-3 md:py-10 md:px-4 selection:bg-zinc-800 selection:text-white">
       
       {/* --- 主卡片容器 --- */}
-      <div className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-zinc-200/50 p-6 md:p-10 transition-all duration-500 flex flex-col min-h-[90vh] md:min-h-auto justify-between gap-6">
+      <div className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-zinc-200/50 p-5 md:p-10 transition-all duration-500 flex flex-col min-h-[85vh] md:min-h-auto justify-between gap-6">
         
         {/* 顶部区域 */}
         <div>
           {/* Header */}
-          <header className="mb-8 border-b border-zinc-100 pb-6">
-             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <header className="mb-6 md:mb-8 border-b border-zinc-100 pb-4 md:pb-6">
+             <div className="flex flex-row items-center justify-between gap-2">
                 {/* 左侧：日期信息 */}
-                <div>
-                   <div className="flex items-baseline gap-3 md:gap-4">
-                    <span className="text-5xl md:text-6xl font-bold tracking-tighter text-zinc-900 leading-none">
+                <div className="flex flex-col">
+                   <div className="flex items-baseline gap-2 md:gap-4">
+                    <span className="text-4xl md:text-6xl font-bold tracking-tighter text-zinc-900 leading-none">
                       {currentDayOfMonth}
                     </span>
                     {/* 🎨 动态月份颜色 */}
-                    <span className={`text-2xl md:text-3xl font-medium ${currentTheme.color} transition-colors duration-500`}>
+                    <span className={`text-xl md:text-3xl font-medium ${currentTheme.color} transition-colors duration-500`}>
                       {currentTheme.name}
                     </span>
-                    <span className="text-2xl md:text-3xl font-light text-zinc-400">
+                    <span className="text-xl md:text-3xl font-light text-zinc-400">
                       {year}
                     </span>
                   </div>
-                  <div className="mt-2 text-lg font-medium text-zinc-500 tracking-wide">
+                  <div className="mt-1 md:mt-2 text-sm md:text-lg font-medium text-zinc-500 tracking-wide">
                     {dayOfWeek}
                   </div>
                 </div>
 
                 {/* 右侧：钱包按钮 */}
-                <div className="flex justify-end pt-2">
+                <div className="flex-shrink-0">
                    <WalletButton />
                 </div>
              </div>
           </header>
 
           {/* --- 中间行：左侧月份 + 右侧功能列 --- */}
-          <div className="mb-8 flex gap-4 md:gap-6 items-stretch">
+          <div className="mb-6 md:mb-8 flex gap-3 md:gap-6 items-stretch">
             {/* 左侧：月份 (两排布局) */}
             <div className="flex-1">
-              <div className="grid grid-cols-6 gap-2 md:gap-3 h-full">
+              <div className="grid grid-cols-6 gap-1.5 md:gap-3">
                 {MONTH_THEMES.map((m, idx) => {
                   const isActive = idx === currentMonthIndex;
                   const isPast = idx < currentMonthIndex;
@@ -268,9 +267,10 @@ const App = () => {
                     <div 
                       key={m.name}
                       className={`
-                        py-3 md:py-3.5 rounded-xl text-xs md:text-sm font-semibold text-center transition-all duration-300 flex items-center justify-center
+                        rounded-lg md:rounded-xl text-[10px] md:text-sm font-semibold text-center transition-all duration-300 flex items-center justify-center
+                        py-3.5 md:py-4 
                         ${isActive 
-                          ? `${m.btn} text-white shadow-lg ${m.shadow} scale-105` 
+                          ? `${m.btn} text-white shadow-md md:shadow-lg ${m.shadow} scale-105` 
                           : isPast 
                             ? 'text-zinc-300 bg-zinc-50/50' 
                             : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50'
@@ -284,8 +284,8 @@ const App = () => {
               </div>
             </div>
 
-            {/* 右侧：功能列 */}
-            <div className="shrink-0 flex flex-col justify-end">
+            {/* 右侧：功能列 (打卡按钮) */}
+            <div className="shrink-0 flex flex-col">
                <CheckInAction />
             </div>
           </div>
@@ -293,27 +293,26 @@ const App = () => {
 
         {/* --- 核心：时光点阵 --- */}
         <div className="flex-grow">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">{year} Grid</h2>
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <h2 className="text-xs md:text-sm font-bold text-zinc-400 uppercase tracking-widest">{year} Grid</h2>
             <div className="flex gap-2 md:gap-4 text-[10px] md:text-xs font-medium">
-              <div className="flex items-center gap-1.5 text-zinc-500">
-                <div className="w-2 h-2 bg-zinc-900 rounded-full"></div> 已逝
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-zinc-900 rounded-full"></div> 已逝
               </div>
               {/* 🎨 动态图例颜色 */}
-              <div className={`flex items-center gap-1.5 ${currentTheme.color}`}>
-                <div className={`w-2 h-2 ${currentTheme.dot} rounded-full`}></div> 剩余
+              <div className={`flex items-center gap-1 ${currentTheme.color}`}>
+                <div className={`w-1.5 h-1.5 md:w-2 md:h-2 ${currentTheme.dot} rounded-full`}></div> 剩余
               </div>
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <div className="w-2 h-2 bg-zinc-200 rounded-full"></div> 将来
+              <div className="flex items-center gap-1 text-zinc-400">
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-zinc-200 rounded-full"></div> 将来
               </div>
             </div>
           </div>
           
-          <div className="flex flex-wrap gap-x-[5px] gap-y-[10px] md:gap-[6px] justify-start content-start">
+          <div className="flex flex-wrap gap-x-[3px] gap-y-[6px] md:gap-x-[5px] md:gap-y-[6px] justify-start content-start">
             {Array.from({ length: totalDays }).map((_, index) => {
               const status = getDotStatus(index);
               
-              // 🎨 动态点阵样式: urgent 使用 currentTheme.dot
               let dotStyle = "";
               if (status === 'past') {
                 dotStyle = "bg-zinc-900";
@@ -327,38 +326,38 @@ const App = () => {
               const dateStr = dateForDot.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 
               return (
-                <div key={index} title={dateStr} className={`w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full transition-all duration-500 ease-out cursor-default ${dotStyle}`} />
+                <div key={index} title={dateStr} className={`w-2 h-2 md:w-3.5 md:h-3.5 rounded-full transition-all duration-500 ease-out cursor-default ${dotStyle}`} />
               );
             })}
           </div>
         </div>
 
         {/* 底部统计 */}
-        <footer className="bg-zinc-50 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 mt-auto">
+        <footer className="bg-zinc-50 rounded-2xl md:rounded-3xl p-4 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 mt-auto">
           <div className="w-full md:w-1/2">
-            <div className="flex justify-between text-sm font-semibold text-zinc-500 mb-2">
+            <div className="flex justify-between text-xs md:text-sm font-semibold text-zinc-500 mb-2">
               <span>{progressPercentage}% 已过</span>
               <span>{100 - progressPercentage}% 剩余</span>
             </div>
-            <div className="h-3 w-full bg-zinc-200 rounded-full overflow-hidden">
+            <div className="h-2 md:h-3 w-full bg-zinc-200 rounded-full overflow-hidden">
               <div className="h-full bg-zinc-900 rounded-full transition-all duration-1000 ease-out" style={{ width: `${progressPercentage}%` }}></div>
             </div>
           </div>
 
-          <div className="flex items-center divide-x divide-zinc-200">
+          <div className="flex items-center divide-x divide-zinc-200 w-full md:w-auto justify-center md:justify-end">
             <div className="px-4 md:px-6 text-center">
-              <span className="block text-2xl md:text-3xl font-bold text-zinc-900">{dayOfYear}</span>
+              <span className="block text-xl md:text-3xl font-bold text-zinc-900">{dayOfYear}</span>
               <span className="text-[10px] md:text-xs text-zinc-400 uppercase font-semibold tracking-wider">已过天数</span>
             </div>
             <div className="px-4 md:px-6 text-center">
-              <span className="block text-2xl md:text-3xl font-bold text-rose-500">{daysRemaining}</span>
+              <span className="block text-xl md:text-3xl font-bold text-rose-500">{daysRemaining}</span>
               <span className="text-[10px] md:text-xs text-zinc-400 uppercase font-semibold tracking-wider">剩余天数</span>
             </div>
           </div>
         </footer>
       </div>
       
-      <div className="mt-6 md:mt-8 text-zinc-400 text-xs font-medium tracking-wide pb-4">
+      <div className="mt-4 md:mt-8 text-zinc-400 text-[10px] md:text-xs font-medium tracking-wide pb-4">
         TIME SCALE • 活在当下
       </div>
       <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}@keyframes pulse-slow{0%,100%{opacity:1;transform:scale(1.1)}50%{opacity:0.8;transform:scale(1)}}.animate-pulse-slow{animation:pulse-slow 4s cubic-bezier(0.4,0,0.6,1) infinite}`}</style>
