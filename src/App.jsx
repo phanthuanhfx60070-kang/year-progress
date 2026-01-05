@@ -164,10 +164,10 @@ const App = () => {
       onClick={connectWallet}
       disabled={isConnecting}
       className={`
-        w-14 md:w-16 h-10 md:h-12 rounded-xl flex items-center justify-center text-[10px] font-bold tracking-wider transition-all duration-300
+        w-14 md:w-16 h-10 md:h-12 rounded-xl flex items-center justify-center text-[10px] font-bold tracking-wider transition-all duration-300 border
         ${walletAddress 
-          ? 'bg-zinc-800 text-white shadow-md' 
-          : 'bg-white border border-zinc-200 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600'
+          ? 'bg-white border-zinc-300 text-zinc-900 shadow-sm' 
+          : 'bg-white border-zinc-200 text-zinc-400 hover:border-zinc-400 hover:text-zinc-600'
         }
       `}
     >
