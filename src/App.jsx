@@ -1,31 +1,35 @@
 import React, { useState, useEffect } from 'react';
 
-// 🔗 LIFT Token Contract Address
+// 🔗 LIFT Token Contract Address (BSC Network)
 const LIFT_CONTRACT_ADDRESS = "0x47b93c2a0920BBe10eFc7854b8FD04a02E85d031";
+
+// ⚙️ 合约函数签名 (Function Selector)
+// 根据您提供的合约代码: function claim() public returns (bool)
+// claim() 的 16 进制签名确实是 0x4e71d92d
+const FUNCTION_SELECTOR = "0x4e71d92d"; 
 
 const App = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [walletAddress, setWalletAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   
-  // Check-in & Token State
+  // 状态管理
   const [isCheckedInToday, setIsCheckedInToday] = useState(false);
   const [checkInLoading, setCheckInLoading] = useState(false);
-  const [liftBalance, setLiftBalance] = useState(0); // Mock LIFT Balance
 
-  // Update time every minute
+  // 每秒更新时间
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDate(new Date());
     }, 1000);
     
-    // Check if wallet is already connected
+    // 自动检测钱包连接状态
     checkIfWalletIsConnected();
 
     return () => clearInterval(timer);
   }, []);
 
-  // --- Web3 Logic (Native window.ethereum) ---
+  // --- Web3 基础逻辑 ---
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -44,7 +48,7 @@ const App = () => {
     try {
       const { ethereum } = window;
       if (!ethereum) {
-        alert("请先安装 MetaMask 钱包!");
+        alert("请先安装 MetaMask 或 OKX 钱包!");
         return;
       }
       
@@ -58,40 +62,50 @@ const App = () => {
     }
   };
 
-  // --- Token Claim Logic (Mocking Smart Contract Interaction) ---
+  // --- 🔗 核心功能：调用合约 claim() ---
   const handleDailyCheckIn = async () => {
-    // If not connected, connect first
+    // 1. 如果没连钱包，先连钱包
     if (!walletAddress) {
       connectWallet();
       return;
     }
 
+    const { ethereum } = window;
+    if (!ethereum) return;
+
     setCheckInLoading(true);
 
     try {
-      // ---------------------------------------------------------
-      // 🔗 真实合约交互逻辑示例 (Real Contract Logic)
-      // ---------------------------------------------------------
-      /*
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(LIFT_CONTRACT_ADDRESS, ['function checkIn() public'], signer);
-      
-      console.log("Interacting with contract:", LIFT_CONTRACT_ADDRESS);
-      const tx = await contract.checkIn(); 
-      await tx.wait(); 
-      */
-      
-      // 模拟 (Simulate)
-      setTimeout(() => {
-        setIsCheckedInToday(true);
-        setLiftBalance(prev => prev + 10);
-        setCheckInLoading(false);
-      }, 1500);
+      // 2. 构造 BSC 交易参数
+      // 您的合约是 PVP 模式，谁点谁领走当前积累的币
+      const transactionParameters = {
+        to: LIFT_CONTRACT_ADDRESS, // 合约地址
+        from: walletAddress,       // 您的地址
+        data: FUNCTION_SELECTOR,   // 调用 claim()
+        value: '0x0',              // 0 ETH/BNB
+      };
+
+      // 3. 唤起钱包签名
+      const txHash = await ethereum.request({
+        method: 'eth_sendTransaction',
+        params: [transactionParameters],
+      });
+
+      console.log("Transaction Sent! Hash:", txHash);
+
+      // 4. 交易已发送
+      // 为了更好的体验，我们假设发送即成功，变为“已领”状态
+      setIsCheckedInToday(true);
+      setCheckInLoading(false);
 
     } catch (error) {
       console.error("Claim Failed:", error);
       setCheckInLoading(false);
+      
+      // 如果用户取消了
+      if (error.code !== 4001) {
+        alert("交易发送失败，请检查网络是否在 BSC 链上。");
+      }
     }
   };
 
@@ -99,7 +113,7 @@ const App = () => {
     return addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : '';
   };
 
-  // --- Date Logic ---
+  // --- 日期计算逻辑 ---
   const year = currentDate.getFullYear();
   const currentMonthIndex = currentDate.getMonth(); 
   const currentDayOfMonth = currentDate.getDate();
@@ -139,42 +153,28 @@ const App = () => {
     }
   };
 
-  // Components for Buttons
-  const WalletButton = () => (
-    !walletAddress ? (
-      <button 
-        onClick={connectWallet}
-        disabled={isConnecting}
-        className="flex items-center gap-2 bg-white border-2 border-zinc-100 text-zinc-600 px-4 py-2 rounded-full text-sm font-semibold hover:bg-zinc-50 hover:border-zinc-200 active:scale-95 transition-all duration-300 shadow-sm"
-      >
-        {isConnecting ? (
-          <span className="w-4 h-4 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin"></span>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
-        )}
-        连接钱包
-      </button>
-    ) : (
-      <div className="flex items-center gap-2 bg-zinc-50 border border-zinc-100 px-4 py-2 rounded-full text-sm font-semibold text-zinc-600 cursor-default shadow-sm">
-        <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-        <span className="font-mono">{formatAddress(walletAddress)}</span>
-        {liftBalance > 0 && (
-          <span className="ml-1 text-amber-500 font-bold">({liftBalance} LIFT)</span>
-        )}
+  // 极简钱包状态指示器 (仅一个小圆点)
+  const WalletIndicator = () => {
+    if (!walletAddress) return null; // 未连接时不显示任何东西，保持极简
+    return (
+      <div className="absolute top-0 right-0 -mt-2 -mr-2">
+         <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
       </div>
-    )
-  );
+    );
+  };
 
-  // Vertical Check-in Button (Minimalist Text Only)
+  // --- 垂直打卡按钮 (完美适配月份高度) ---
   const CheckInAction = () => {
-    // Base style for the vertical pill
     const baseClass = "group w-14 md:w-16 h-full rounded-2xl flex flex-col items-center justify-center shadow-lg transition-all duration-300 active:scale-95 border";
     
-    // CASE 1: Checked In (Token Claimed State)
+    // 状态 1: 已领 (交易已发送)
     if (isCheckedInToday) {
       return (
-        <div className={`${baseClass} bg-amber-50 border-amber-100 text-amber-600 cursor-default animate-fade-in`}>
-          <div className="flex flex-col text-sm md:text-base font-bold tracking-widest leading-tight opacity-90 text-center gap-1">
+        <div className={`${baseClass} bg-amber-50 border-amber-100 text-amber-600 cursor-default`}>
+          <div className="flex flex-col text-sm md:text-base font-bold tracking-widest leading-tight opacity-90 text-center gap-2">
             <span>已</span>
             <span>领</span>
           </div>
@@ -182,23 +182,27 @@ const App = () => {
       );
     }
 
-    // CASE 2: Not Checked In (Claim Action)
+    // 状态 2: 打卡/领币 (PVP Claim)
+    // 无论是否连接钱包，都显示“打卡”，点击时自动处理连接
     return (
       <button
         onClick={handleDailyCheckIn}
         disabled={checkInLoading}
-        className={`${baseClass} bg-rose-500 border-rose-500 text-white hover:bg-rose-600 hover:shadow-rose-200/50 hover:scale-[1.02]`}
+        className={`${baseClass} bg-rose-500 border-rose-500 text-white hover:bg-rose-600 hover:shadow-rose-200/50 hover:scale-[1.02] relative`}
       >
-        <div className="flex flex-col text-lg md:text-xl font-bold tracking-widest leading-tight gap-2">
+        <div className="flex flex-col text-lg md:text-xl font-bold tracking-widest leading-tight gap-2 items-center">
           {checkInLoading ? (
-            <span className="text-base">...</span>
+            <span className="text-base animate-pulse">...</span>
           ) : (
             <>
+              {/* 极简文字: 打卡 */}
               <span>打</span>
               <span>卡</span>
             </>
           )}
         </div>
+        {/* 如果已连接钱包，显示一个小绿点指示 */}
+        <WalletIndicator />
       </button>
     );
   };
@@ -206,14 +210,14 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-zinc-900 font-sans flex flex-col items-center py-6 px-4 md:py-10 selection:bg-zinc-800 selection:text-white">
       
-      {/* --- Main Card Container --- */}
+      {/* --- 主卡片容器 --- */}
       <div className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-zinc-200/50 p-6 md:p-10 transition-all duration-500 flex flex-col min-h-[90vh] md:min-h-auto justify-between gap-6">
         
-        {/* Top Section Wrapper */}
+        {/* 顶部区域 */}
         <div>
-          {/* Header */}
+          {/* 日期头部 (钱包按钮已移除，改为集成在打卡按钮上或隐藏) */}
           <header className="flex flex-col gap-6 mb-8 border-b border-zinc-100 pb-6 md:flex-row md:items-start md:justify-between">
-            {/* Date Info */}
+            {/* 左侧：大日期 */}
             <div>
                <div className="flex items-baseline gap-3 md:gap-4">
                 <span className="text-5xl md:text-6xl font-bold tracking-tighter text-zinc-900 leading-none">
@@ -230,16 +234,16 @@ const App = () => {
                 {dayOfWeek}
               </div>
             </div>
-
-            {/* Wallet Action Area */}
-            <div className="flex items-center justify-between md:flex-col md:items-end md:gap-2 md:pt-2">
-               <WalletButton />
+            
+            {/* 右侧：原本的钱包按钮区域现在留空，保持极简，钱包状态通过打卡按钮上的小绿点暗示 */}
+            <div className="hidden md:block">
+               {/* Spacer if needed */}
             </div>
           </header>
 
-          {/* --- MIDDLE ROW: Month Selector + Check-in Button --- */}
+          {/* --- 中间行：左侧月份 + 右侧打卡按钮 --- */}
           <div className="mb-8 flex gap-4 md:gap-6 items-stretch">
-            {/* Left: Months (Flexible Width) */}
+            {/* 左侧：月份 (两排布局) */}
             <div className="flex-1">
               <div className="grid grid-cols-6 gap-2 md:gap-3 h-full">
                 {months.map((m, idx) => {
@@ -265,14 +269,14 @@ const App = () => {
               </div>
             </div>
 
-            {/* Right: Check-in Button (Auto Height) */}
+            {/* 右侧：打卡按钮 (自动高度) */}
             <div className="shrink-0">
                <CheckInAction />
             </div>
           </div>
         </div>
 
-        {/* --- Core Content: Grid --- */}
+        {/* --- 核心：时光点阵 --- */}
         <div className="flex-grow">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-sm font-bold text-zinc-400 uppercase tracking-widest">{year} Grid</h2>
@@ -297,7 +301,7 @@ const App = () => {
           </div>
         </div>
 
-        {/* Bottom Stats */}
+        {/* 底部统计 */}
         <footer className="bg-zinc-50 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6 mt-auto">
           <div className="w-full md:w-1/2">
             <div className="flex justify-between text-sm font-semibold text-zinc-500 mb-2">
@@ -323,9 +327,9 @@ const App = () => {
       </div>
       
       <div className="mt-6 md:mt-8 text-zinc-400 text-xs font-medium tracking-wide pb-4">
-        {walletAddress ? 'WEB3 CONNECTED • TIME IS MONEY' : 'TIME SCALE • 活在当下'}
+        TIME SCALE • 活在当下
       </div>
-      <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}@keyframes pulse-slow{0%,100%{opacity:1;transform:scale(1.1)}50%{opacity:0.8;transform:scale(1)}}.animate-pulse-slow{animation:pulse-slow 4s cubic-bezier(0.4,0,0.6,1) infinite}@keyframes fade-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}.animate-fade-in{animation:fade-in 0.3s ease-out}`}</style>
+      <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}@keyframes pulse-slow{0%,100%{opacity:1;transform:scale(1.1)}50%{opacity:0.8;transform:scale(1)}}.animate-pulse-slow{animation:pulse-slow 4s cubic-bezier(0.4,0,0.6,1) infinite}`}</style>
     </div>
   );
 };
