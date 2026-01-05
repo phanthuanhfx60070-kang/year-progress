@@ -268,7 +268,7 @@ const App = () => {
                       key={m.name}
                       className={`
                         rounded-lg md:rounded-xl text-[10px] md:text-sm font-semibold text-center transition-all duration-300 flex items-center justify-center
-                        py-3.5 md:py-4 
+                        py-2.5 md:py-4 
                         ${isActive 
                           ? `${m.btn} text-white shadow-md md:shadow-lg ${m.shadow} scale-105` 
                           : isPast 
@@ -277,7 +277,7 @@ const App = () => {
                         }
                       `}
                     >
-                      {m.name}
+                      {idx + 1}
                     </div>
                   );
                 })}
